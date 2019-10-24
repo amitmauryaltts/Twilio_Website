@@ -32,23 +32,7 @@
         </div>
       </div>
     </div>
-    <div class="popUp">
-      <div class="modal fade" id="answerCallModalForoperator" data-keyboard="false" data-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-body" style="text-align: center">
-              <img src="@/assets/phoneCalling.png" id="phoneCallImg">
-              <div id="licensePlate" style="clear:both">
-                <p>Connecting.......</p>
-              </div>
-            </div>
-            <div>
-<!--            <button @click="videoCall(callLogs.car.deviceId, callLogs.car.deviceIMEI, true">Cancel Call</button>-->
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+
     <div class="card-deck call-logs">
       <div class="card">
         <div class="card-body">
@@ -82,6 +66,34 @@
                   <i class="fas fa-phone-volume"
                      v-on:click="voiceCall('value', mqttFun, callLogs.car.deviceId, callLogs.car.deviceIMEI, false)"
                      style="cursor: pointer;font-size: 19px;"> </i>
+
+                  <div class="popUp">
+                    <div class="modal fade" id="answerCallModalForoperator" data-keyboard="false"
+                         data-backdrop="static">
+                      <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                          <div class="modal-body" style="text-align: center">
+                            <img src="@/assets/phoneCalling.png" id="phoneCallImg">
+                            <div id="licensePlate" style="clear:both">
+                              <p>Connecting.......</p>
+                              <div style="font-size: 26px;color: black">
+                                {{counter }}
+                              </div>
+                            </div>
+                          </div>
+                          <div>
+                            <button @click="videoCall(callLogs.car.deviceId, callLogs.car.deviceIMEI, true)">Cancel
+                              Call
+                            </button>
+                            <button
+                              @click="voiceCall('value', mqttFun, callLogs.car.deviceId, callLogs.car.deviceIMEI, true)">
+                              Cancel Audio Call
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </td>
               </tr>
               </tbody>
@@ -100,8 +112,7 @@
   import FMSDeviceIdApi from '../ApiFile/FMSDeviceIdApi'
   import EventBus from '../Utils/EventBus';
   import SaveUpdateDvrDetails from '../ApiFile/SaveUpdateDvrDetails';
-  import DriverInfoServices from '../ApiFile/DriverInfoService'
-
+  import DriverInfoServices from '../ApiFile/DriverInfoService';
 
   const Twilio = require('twilio-client');
   const {connect, createLocalVideoTrack} = require('twilio-video');
@@ -116,6 +127,7 @@
   var recordSid;
   var callSid;
   var x = {};
+  var connection;
 
   export default {
     name: 'OperatorCalls',
@@ -143,7 +155,8 @@
         carId: '',
         carModelName: '',
         carLicensePlateNumber: '',
-        job_description: ''
+        job_description: '',
+        counter: 0
       }
     },
     props: ["noDivert"],
@@ -168,7 +181,8 @@
         if (value) {
           return moment(String(value)).format('YYYY/MM/DD')
         }
-      }
+      },
+
     },
     mounted() {
       Twilio.Device.on('disconnect', function (conn) {
@@ -213,43 +227,119 @@
     methods: {
       /* code for video call  */
       voiceCall: function (value, callback, deviceId, imeiNo, cancelCall) {
-        var vmm = this;
-        vmm.noDrivert = true;
-        this.date = new Date;
-        this.timestamp = this.date.getTime();
-        this.paramsForAudio = {
-          to: deviceId,
-          conferenceName: 'hardcodedRoomName'+this.timestamp
-        };
-        $('#answerCallModalForoperator').modal('show');
-        var connection;
-        Twilio.Device.connect(this.paramsForAudio);
-        Twilio.Device.on("connect", function (conn) {
-          connection = conn;
-          console.log('connection', connection);
-          globalConn = connection.mediaStream.callSid;
+        /* APi for Opeartor logs */
+        ApiIntegration.logsDetails('audio Call')
+          .then((response)=>{
+            console.log('response',response)
+          }).catch((error)=>{
+          console.log('error',error)
         });
+        $('#answerCallModalForoperator').modal('show');
+        var conferenceNameCancelCall = localStorage.getItem('conferenceName');
+        var imeiNoforCancelAudioCall = localStorage.getItem('imeiNoAudio');
+        var localCallSid = localStorage.getItem('callSid');
+        var myVar = setInterval(() => {
+          this.counter = this.counter + 1;
+        }, 1000);
         setTimeout(() => {
-          if (vmm.noDivert === undefined || vmm.noDivert === null) {
-            /* Api to get save call logs  */
-            SaveUpdateDvrDetails.saveCallLogsFromDvrToOperator(globalConn, "Umesh", imeiNo, connection.message.to, 'outgoing', "voice")
+
+          console.log('zzzzzzz', this.counter);
+          var callSid = localStorage.getItem('callSid')
+          if (this.counter === 30 && callSid == undefined)  {
+            clearInterval(myVar);
+            this.counter=0;
+            $('#answerCallModalForoperator').modal('hide');
+            MqttServices.voiceMqtt(conferenceNameCancelCall, imeiNoforCancelAudioCall, true)
+              .then((responseMqtt) => {
+                console.log('response', responseMqtt);
+                // SaveUpdateDvrDetails.updateCalllogsFromDvrToOperator(localRoomSid, '', '', '', 'cancel')
+                //   .then((response) => {
+                //     console.log('response', response.data);
+                //   }).catch((err) => {
+                //   console.log('err', err);
+                // })
+              }).catch((error) => {
+              console.log('error', error);
+              connection.disconnect();
+              SaveUpdateDvrDetails.updateCalllogsFromDvrToOperator(localCallSid, '', '', '', 'cancel')
+                .then((response) => {
+                  console.log('response', response.data);
+                }).catch((err) => {
+                console.log('err', err);
+              })
+            });
+          }
+        }, 30000);
+        if (cancelCall === true) {
+          this.counter=0;
+          clearInterval(myVar);
+          $('#answerCallModalForoperator').modal('hide');
+          connection.disconnect();
+          MqttServices.voiceMqtt(conferenceNameCancelCall, imeiNoforCancelAudioCall, true)
+            .then((responseMqtt) => {
+              console.log('response', responseMqtt);
+              // SaveUpdateDvrDetails.updateCalllogsFromDvrToOperator(localCallSid, '', '', '', 'cancel')
+              //   .then((response) => {
+              //     console.log('response', response.data);
+              //   }).catch((err) => {
+              //   console.log('err', err);
+              // })
+            }).catch((error) => {
+            console.log('error', error);
+            SaveUpdateDvrDetails.updateCalllogsFromDvrToOperator(localCallSid, '', '', '', 'cancel')
+              .then((response) => {
+                console.log('response', response.data);
+              }).catch((err) => {
+              console.log('err', err);
+            })
+          });
+        } else {
+          var vmm = this;
+          vmm.noDrivert = true;
+          this.date = new Date;
+          this.timestamp = this.date.getTime();
+          this.paramsForAudio = {
+            to: deviceId,
+            conferenceName: 'operator_' + this.timestamp
+          };
+          localStorage.setItem('conferenceName', this.paramsForAudio.conferenceName);
+          localStorage.setItem('imeiNoAudio', imeiNo);
+          Twilio.Device.connect(this.paramsForAudio);
+          Twilio.Device.on("connect", function (conn,conn1) {
+            console.log('conn1',conn1);
+            connection = conn;
+            console.log('connection', connection);
+            globalConn = connection.mediaStream.callSid;
+            localStorage.setItem('callSid', globalConn);
+            SaveUpdateDvrDetails.saveCallLogsFromDvrToOperator(globalConn, "Roger", imeiNo, connection.message.to, 'outgoing', "voice")
               .then((response) => {
                 console.log('response', response);
               }).catch((error) => {
               console.log('error', error);
             });
-            console.log(value);
-            router.push({
-              name: "DriverInfo",
-              params: {
-                callSid: globalConn,
-                deviceId: connection.message.to,
-                passConnToDisconnectOutgoingCall: connection
-              }
-            });
-          }
-        }, 7000);
-        callback(imeiNo, cancelCall);
+          });
+          setTimeout(() => {
+            if (vmm.noDivert === undefined || vmm.noDivert === null) {
+              /* Api to get save call logs  */
+              SaveUpdateDvrDetails.saveCallLogsFromDvrToOperator(globalConn, "Roger", imeiNo, connection.message.to, 'outgoing', "voice")
+                .then((response) => {
+                  console.log('response', response);
+                }).catch((error) => {
+                console.log('error', error);
+              });
+              console.log(value);
+              router.push({
+                name: "DriverInfo",
+                params: {
+                  callSid: globalConn,
+                  deviceId: connection.message.to,
+                  passConnToDisconnectOutgoingCall: connection
+                }
+              });
+            }
+          }, 7000);
+          callback(imeiNo, cancelCall);
+        }
       },
       /* function to send mqtt msg to dvr  */
       mqttFun(imeiNo, cancelCall) {
@@ -263,113 +353,187 @@
       },
 
       videoCall(deviceID, imeiNo, callCancel) {
+        ApiIntegration.logsDetails('video Call')
+          .then((response)=>{
+            console.log('response',response)
+          }).catch((error)=>{
+          console.log('error',error)
+        });
         var vm = this;
+        var imeiNoforCancelCall = localStorage.getItem('imeiNoVideo');
+        var uniqueNameforCancelCall = localStorage.getItem('uniqueName');
+        var localRoomSid = localStorage.getItem('roomSid');
         $('#answerCallModalForoperator').modal('show');
-        /* Api to create room for video call */
-        ApiIntegration.createRoomApi()
-          .then((response) => {
-            console.log(response.data);
-            if (response.data.room.status === 'in-progress') {
-              console.log('room created successfully');
-              const uniqueName = response.data.room.uniqueName;
-              /* Api to send room details to mqtt for video call */
-              MqttServices.videoMqtt(uniqueName, imeiNo, callCancel)
-                .then((responseMqtt) => {
+        var videoInterval = setInterval(() => {
+          this.counter = this.counter + 1;
+        }, 1000);
+        setTimeout(() => {
+         var roomStatus =  localStorage.getItem('roomStatus')
+          if (this.counter === 30 && roomStatus != 'in-progress') {
+            this.counter=0;
+            clearInterval(videoInterval);
+            $('#answerCallModalForoperator').modal('hide');
+            MqttServices.videoMqtt(uniqueNameforCancelCall, imeiNoforCancelCall, true)
+              .then((responseMqtt) => {
                 console.log('response', responseMqtt);
+                // SaveUpdateDvrDetails.updateCalllogsFromDvrToOperator(localRoomSid, '', '', '', 'cancel')
+                //   .then((response) => {
+                //     console.log('response', response.data);
+                //   }).catch((err) => {
+                //   console.log('err', err);
+                // })
               }).catch((error) => {
-                console.log('error', error);
-              });
-              getAcessToken = localStorage.getItem('setAccessToken');
-              console.log('getAcessToken', getAcessToken);
-              connect(getAcessToken, {
-                name: uniqueName,
-                audio: true,
-                isRecording: true,
-                video: false
-              }).then(room => {
-                console.log(`Successfully joined a Room: ${room}`);
-                room.on('participantConnected', participant => {
-                  console.log(`A remote Participant connected: ${participant}`);
-                  window.room = room;
-                  /* Api for save video call logs */
-                  SaveUpdateDvrDetails.saveCallLogsFromDvrToOperator(room.sid, "Umesh", imeiNo, deviceID, 'outgoing', "video")
-                    .then((response) => {
-                      console.log('responseSaveCallLogsFromDvrToOperator', response)
-                    }).catch((error) => {
-                    console.log('error', error);
-                  });
-                  participant.tracks.forEach(publication => {
-                    if (publication.isSubscribed) {
-                      istracksubscribe = publication.track;
-                      if (istracksubscribe.kind === 'video') {
+              console.log('error', error);
+              SaveUpdateDvrDetails.updateCalllogsFromDvrToOperator(localRoomSid, '', '', '', 'cancel')
+                .then((response) => {
+                  console.log('response', response.data);
+                }).catch((err) => {
+                console.log('err', err);
+              })
+            });
+          }
+        }, 30000);
+        if (callCancel === true) {
+          this.counter=0;
+          clearInterval(videoInterval);
+          $('#answerCallModalForoperator').modal('hide');
+          MqttServices.videoMqtt(uniqueNameforCancelCall, imeiNoforCancelCall, true)
+            .then((responseMqtt) => {
+              console.log('response', responseMqtt);
+              // SaveUpdateDvrDetails.updateCalllogsFromDvrToOperator(localRoomSid, '', '', '', 'cancel')
+              //   .then((response) => {
+              //     console.log('response', response.data);
+              //   }).catch((err) => {
+              //   console.log('err', err);
+              // })
+            }).catch((error) => {
+            console.log('error', error);
+            SaveUpdateDvrDetails.updateCalllogsFromDvrToOperator(localRoomSid, '', '', '', 'cancel')
+              .then((response) => {
+                console.log('response', response.data);
+              }).catch((err) => {
+              console.log('err', err);
+            })
+          });
+        } else {
+          /* Api to create room for video call */
+          ApiIntegration.createRoomApi()
+            .then((response) => {
+              console.log(response.data);
+              localStorage.setItem('roomStatus',response.data.room.status)
+              if (response.data.room.status === 'in-progress') {
+                console.log('room created successfully');
+                const uniqueName = response.data.room.uniqueName;
+                localStorage.setItem('uniqueName', uniqueName);
+                localStorage.setItem('imeiNoVideo', imeiNo);
+                /* Api to send room details to mqtt for video call */
+                MqttServices.videoMqtt(uniqueName, imeiNo, callCancel)
+                  .then((responseMqtt) => {
+                    console.log('response', responseMqtt);
+                  }).catch((error) => {
+                  console.log('error', error);
+                });
+                getAcessToken = localStorage.getItem('setAccessToken');
+                console.log('getAcessToken', getAcessToken);
+                connect(getAcessToken, {
+                  name: uniqueName,
+                  audio: true,
+                  isRecording: true,
+                  video: false
+                }).then(room => {
+                  console.log(`Successfully joined a Room: ${room}`);
+                  localStorage.setItem('roomSid', room.sid);
+                  // SaveUpdateDvrDetails.saveCallLogsFromDvrToOperator(room.sid, "Roger", imeiNo, deviceID, 'outgoing', "video")
+                  //   .then((response) => {
+                  //     console.log('responseSaveCallLogsFromDvrToOperator', response)
+                  //   }).catch((error) => {
+                  //   console.log('error', error);
+                  // });
+                  room.on('participantConnected', participant => {
+                    console.log(`A remote Participant connected: ${participant}`);
+                    window.room = room;
+                    /* Api for save video call logs */
+                    SaveUpdateDvrDetails.saveCallLogsFromDvrToOperator(room.sid, "Roger", imeiNo, deviceID, 'outgoing', "video")
+                      .then((response) => {
+                        console.log('responseSaveCallLogsFromDvrToOperator', response)
+                      }).catch((error) => {
+                      console.log('error', error);
+                    });
+                    participant.tracks.forEach(publication => {
+                      if (publication.isSubscribed) {
+                        istracksubscribe = publication.track;
+                        if (istracksubscribe.kind === 'video') {
+                          router.push({
+                            name: "DriverInfo",
+                            params: {
+                              fromOperatorToDashboard: true,
+                              isTrackSubscribe: istracksubscribe,
+                              deviceId: deviceID
+                            }
+                          })
+                        }
+                      }
+                    });
+
+                    participant.on('trackSubscribed', track => {
+                      trackSubscribed = track;
+                      if (trackSubscribed.kind === "audio") {
+                        vm.sendAudioVideoObj.audioRecord = trackSubscribed;
+                      }
+                      vm.sendAudioVideoObj.videoRecord = trackSubscribed;
+                      if (trackSubscribed.kind === 'video') {
                         router.push({
                           name: "DriverInfo",
                           params: {
                             fromOperatorToDashboard: true,
-                            isTrackSubscribe: istracksubscribe,
-                            deviceId: deviceID
+                            trackSubscribed: vm.sendAudioVideoObj,
+                            deviceId: deviceID,
+                            roomSid: room.sid,
+                            participantSid: participant.sid,
+                            roomName: uniqueName,
+                            room: room,
+                            imeiNo: imeiNo
                           }
                         })
                       }
-                    }
+                    });
                   });
+                  room.on('participantDisconnected', participant => {
+                    console.log(`Participant disconnected: ${participant.identity}`);
+                    /* Api to get composition sid to save video call */
+                    localStorage.removeItem('roomStatus');
+                    SaveUpdateDvrDetails.composeVideoRecordings(room.sid, participant.sid, vm.fmsToken)
+                      .then((videoResponse) => {
+                        console.log('videoResponse', videoResponse);
+                        vm.compositionSid = videoResponse.data.composition.sid;
+                        vm.videoResponse = videoResponse.data.composition.url;
+                        /* Api to update call logs */
+                        SaveUpdateDvrDetails.updateCalllogsFromDvrToOperator(room.sid, vm.notesMessage, vm.videoResponse, vm.compositionSid)
+                          .then((response) => {
+                            console.log('responseSaveUpdateDvrDetails', response)
 
-                  participant.on('trackSubscribed', track => {
-                    trackSubscribed = track;
-                    if (trackSubscribed.kind === "audio") {
-                      vm.sendAudioVideoObj.audioRecord = trackSubscribed;
-                    }
-                    vm.sendAudioVideoObj.videoRecord = trackSubscribed;
-                    if (trackSubscribed.kind === 'video') {
-                      router.push({
-                        name: "DriverInfo",
-                        params: {
-                          fromOperatorToDashboard: true,
-                          trackSubscribed: vm.sendAudioVideoObj,
-                          deviceId: deviceID,
-                          roomSid: room.sid,
-                          participantSid: participant.sid,
-                          roomName: uniqueName,
-                          room: room,
-                          imeiNo: imeiNo
-                        }
-                      })
-                    }
+                            }).catch((error) => {
+                          console.log('error', error)
+                        });
+                        room.disconnect();
+                      }).catch((error) => {
+                      console.log('error', error);
+                    })
                   });
-                });
-                room.on('participantDisconnected', participant => {
-                  console.log(`Participant disconnected: ${participant.identity}`);
-                  /* Api to get composition sid to save video call */
-                  SaveUpdateDvrDetails.composeVideoRecordings(room.sid, participant.sid, vm.fmsToken)
-                    .then((videoResponse) => {
-                      console.log('videoResponse', videoResponse);
-                      vm.compositionSid = videoResponse.data.response.body.composition.sid;
-                      vm.videoResponse = videoResponse.data.response.body.composition.url;
-                      /* Api to update call logs */
-                      SaveUpdateDvrDetails.updateCalllogsFromDvrToOperator(room.sid, vm.notesMessage, vm.videoResponse, vm.compositionSid)
-                        .then((response) => {
-                          console.log('responseSaveUpdateDvrDetails', response)
-                        }).catch((error) => {
-                        console.log('error', error)
-                      });
-                      room.disconnect();
-                    }).catch((error) => {
-                    console.log('error', error);
-                  })
-                });
-                room.on('disconnected', room => {
-                  room.localParticipant.tracks.forEach(publication => {
-                    const attachedElements = publication.track.detach();
-                    attachedElements.forEach(element => element.remove());
+                  room.on('disconnected', room => {
+                    room.localParticipant.tracks.forEach(publication => {
+                      const attachedElements = publication.track.detach();
+                      attachedElements.forEach(element => element.remove());
+                    });
                   });
+                }, error => {
+                  console.error(`Unable to connect to Room: ${error.message}`);
                 });
-              }, error => {
-                console.error(`Unable to connect to Room: ${error.message}`);
-              });
-            }
-          }).catch((err) => {
-          console.log('createErrorMsg', err.message)
-        })
+              }
+            }).catch((err) => {
+            console.log('createErrorMsg', err.message)
+          })
+        }
       },
       closeCarDriverInformationPopup() {
         $('#carInformationModal').modal('hide')
@@ -383,6 +547,16 @@
         this.carLicensePlateNumber = carDriverInformation.car.licensePlateNumber;
         this.job_description = carDriverInformation.car == "deviceId does not exists" ? 'No Job Description Found' : carDriverInformation.job.description;
       },
+      // callLogsDataArraynew(data) {
+      //   function compare(a, b) {
+      //     if (a.displayname < b.displayname)
+      //       return -1;
+      //     if (a.displayname > b.displayname)
+      //       return 1;
+      //     return 0;
+      //   }
+      //   return this.arrays.sort(compare);
+      // }
     },
   }
 </script>
@@ -391,56 +565,71 @@
   .driverInfo {
     padding-left: 20px;
   }
+
   #remote_part {
     background: #575858;
   }
+
   .bg-success {
     background-color: #4ad991 !important;
     border-color: #43ca86;
   }
+
   .bg-warning {
     background-color: #ffca83 !important;
     border-color: #f89b2d;
   }
+
   .bg-danger {
     background-color: #ff6366 !important;
     border-color: #d44447;
   }
+
   .bg-primary {
     background-color: #7697f7 !important;
     border-color: #5b78ca;
   }
+
   .call-status-logs {
     color: white;
     font-weight: bold;
   }
+
   .fa-icon {
     padding: 10px;
     font-size: 36px;
     width: 24%;
   }
+
   .call-status-logs .call-status {
     width: 48%;
   }
+
   .call-status-logs .call-num {
     width: 23%;
   }
+
   .call-status-logs .card-body {
     padding: 10px;
   }
+
   .call-status-logs .card-body span {
     font-size: 24px;
     font-weight: 400;
   }
+
   .call-log-btn-head {
     float: right;
   }
+
   .call-log-btn-head .fa-search {
     padding-left: 10px
   }
+
   .call-logs table .btn-cell {
     color: #7697f7;
   }
+
   .call-logs table .btn-cell .fa-clipboard-list {
     padding-right: 10px;
   }

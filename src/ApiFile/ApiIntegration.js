@@ -10,6 +10,11 @@ var activitySid = 'AC22a9112e394e806fba11993355c6e773';
 var apiKey = 'c32a4ewUDD1NHwDFhOBbJ7CTsrbiOwKz85ttbNRi';
 var startRecordOnParticipantConnect = true;
 
+function getData() {
+  this.date = new Date;
+  this.timestamp = this.date.getTime();
+};
+
 export default {
   /*
      Function to get the Access Token
@@ -61,14 +66,14 @@ export default {
   /*
       Function  to update the worker
    */
-  updateWorker() {
+  updateWorker(status) {
     return axios({
       method: 'PUT',
       url: `${Config.base_url}taskrouter/worker`,
       data: JSON.stringify({
         "workspaceSid": workSpaceId,
         "workerSid": workerId,
-        "activitySid": activitySid
+        "status": status
       }),
       headers: {
         'Authorization': Config.header.authorization,
@@ -97,7 +102,7 @@ export default {
     return axios({
       method: 'POST',
       url: `${Config.base_url_seven}auth/devices/login`,
-      body:JSON.stringify({
+      data:JSON.stringify({
       "model": "CDR8010",
       "unique_id": "357601090000310",
       "client_id": "askey.dvr.cdr8010"
@@ -105,6 +110,29 @@ export default {
       headers: {
         'Content-Type': Config.header.contentType,
         'x-api-key': 'cxcGsgoN0i2kolOo43lO49SRTXnYlvoX8jQt2sgf'
+      }
+    });
+  },
+  /*
+     Function to get log details of operator
+ */
+  logsDetails(eventName) {
+    var gettimestamp = new getData();
+    return axios({
+      method: 'POST',
+      url: `${Config.base_url}event/eventlogs`,
+      data:JSON.stringify({
+        "eventLog": {
+          "workspacesid": workSpaceId,
+          "workersid": workerId,
+          "date": gettimestamp.timestamp,
+          "eventname": eventName,
+          "log": "Operator Roger logged into the system"
+        }
+      }),
+      headers: {
+        'Authorization': Config.header.authorization,
+        'Content-Type': Config.header.contentType
       }
     });
   }

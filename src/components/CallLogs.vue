@@ -67,7 +67,7 @@
                 <td >{{ callLog.deviceCallLogDetails.callLog.date | formatTime }}</td>
                 <td v-if="callLog.deviceCallLogDetails.car.licensePlateNumber"><button @click="showDriverInformation(callLog.deviceCallLogDetails)" >{{ callLog.deviceCallLogDetails.car.licensePlateNumber }}</button></td>
                 <td v-else-if="callLog.deviceCallLogDetails.car =='deviceId does not exists' ">{{ callLog.deviceCallLogDetails.car.licensePlateNumber }}</td>
-                <td >  {{  callLog.deviceCallLogDetails.job.description }}</td>
+                <td >  {{  callLog.deviceCallLogDetails.job  == undefined ? '' : callLog.deviceCallLogDetails.job.description}}</td>
                 <td >{{ callLog.deviceCallLogDetails.callLog.duration }} seconds</td>
                 <td class="btn-cell" >
                   <i  class="fas fa-clipboard-list"
@@ -341,12 +341,12 @@ export default {
           CallLogsService.playVideoRecordings(vm.recordingSid)
             .then(response =>{
               console.log(response)
-              if(Object.keys(response.data.response.body).length == 0){
+              if(Object.keys(response.data).length == 0){
                 //vm.$loading(true)
               }else{
                 vm.videoLoader = false;
                 clearInterval(timeout);
-                vm.videoLink = response.data.response.body.videoRecordingUrl;
+                vm.videoLink = response.data.videoRecordingUrl;
                 $('#mediaPlayerPopup').modal('show');
                 if(checkVideoAudio == 'Audio'){
                   vm.showVideoRecording = false;

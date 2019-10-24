@@ -26,6 +26,7 @@ export default {
         "callLog": {
           "id": callSid,
           "category": catgeary,
+          "eventdescription": "left tire has been broken over the bridge",
           "status": "ongoing",
           "type": type,
           "date": gettimestamp.timestamp,
@@ -46,14 +47,14 @@ export default {
   /*
     Function to update the call logs with recordings and notes after disconnecting calls 
   */
-  updateCalllogsFromDvrToOperator(callSid, message, recordingUrl, recordingSid) {
+  updateCalllogsFromDvrToOperator(callSid, message, recordingUrl, recordingSid, status) {
     return axios({
       method: 'PUT',
       url: `${Config.base_url}call/calllogs`,
       data: JSON.stringify({
         "callLog": {
           "id": callSid,
-          "status": "completed",
+          "status": status,
           "duration": 0,
           "recordingUrl": recordingUrl,
           "notes": message,

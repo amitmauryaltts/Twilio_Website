@@ -62,6 +62,9 @@
                 John Doe
                 <img src="/static/profile1.PNG" class="rounded-circle" alt="John Doe">
               </a>
+              <div class="dropdown-menu">
+                <a class="dropdown-item"  @click="logOut"> Log Out </a>
+              </div>
             </li>
           </ul>
         </nav>
@@ -85,6 +88,7 @@
   import SaveUpdateDvrDetails from './ApiFile/SaveUpdateDvrDetails';
   import EventBus from './Utils/EventBus';
   import connect from 'twilio-video';
+  import VueCookies from 'vue-cookies'
 
   const Twilio = require('twilio-client');
   const TaskRouter = require('twilio-taskrouter');
@@ -103,6 +107,28 @@
       },
       acceptCall: function () {
         popupForm.accept = true;
+      },
+      logOut(){
+        // if (confirm("Close Window?")) {
+        //   window.close();
+        // }
+
+        ApiIntegration.logsDetails('logOut')
+          .then((response)=>{
+            console.log('response',response)
+          }).catch((error)=>{
+          console.log('error',error)
+        });
+        ApiIntegration.updateWorker('Offline')
+          .then((response)=>{
+            console.log('response',response);
+            localStorage.clear();
+            window.close();
+
+          }).catch((error)=>{
+          console.log('error',error);
+        })
+
       }
     },
     created() {
@@ -129,12 +155,29 @@
         })
       });
       /*    Side bar  code end here   */
+
       popupForm = this;
-      var fmsToken = this.$route.query.access_token == undefined ? localStorage.getItem("fmsToken") : this.$route.query.access_token;   //Getting FMS token from Local Storage
+      //var fmsToken = this.$route.query.access_token == undefined ? localStorage.getItem("fmsToken") : this.$route.query.access_token;   //Getting FMS token from Local Storage
+      var fmsToken =  $cookies.get('access_token')  == undefined ? localStorage.getItem("fmsToken")  : $cookies.get('access_token');
       console.log(fmsToken);
       localStorage.setItem("fmsToken", fmsToken);
       window.fmsToken = localStorage.getItem("fmsToken");
       console.log(window.fmsToken);
+      window.onbeforeunload = function() {
+        // if (confirm("Are you want to logout")) {
+        //     window.close();
+        //   ApiIntegration.updateWorker('Offline')
+        //     .then((response)=>{
+        //       console.log('response',response);
+        //       localStorage.clear();
+        //       window.close();
+        //
+        //     }).catch((error)=>{
+        //     console.log('error',error);
+        //   })
+        // }
+        return "Are you want to logout"
+      };
     },
 
     data() {
@@ -160,6 +203,12 @@
         const trimTo = saveData.To;
         popupForm.trimClientTo = trimTo.substring(7);
         $('.modal-backdrop').hide();
+        ApiIntegration.logsDetails('AnswerCall')
+          .then((response)=>{
+            console.log('response',response)
+          }).catch((error)=>{
+          console.log('error',error)
+        });
         /*  On Incoming call answer save Call logs */
         SaveUpdateDvrDetails.saveCallLogsFromDvrToOperator(saveData.CallSid, trimClientFrom, popupForm.trimClientTo, popupForm.imeiToDeviceID, 'incoming', "voice")
           .then((resdata) => {
@@ -238,7 +287,7 @@
             // });
             if (window.location.href === `${window.location.hostname}/dashboard`) {
               /* API is call to get update the call logs  */
-              SaveUpdateDvrDetails.updateCalllogsFromDvrToOperator(saveData.CallSid, '', popupForm.recordingUrl.url, popupForm.recordingUrl.recordingSid)
+              SaveUpdateDvrDetails.updateCalllogsFromDvrToOperator(saveData.CallSid, '', popupForm.recordingUrl.url, popupForm.recordingUrl.recordingSid, "completed")
                 .then((response) => {
                   console.log('response', response.data);
                   conn.disconnect();
@@ -250,16 +299,17 @@
           });
           Twilio.Device.on('disconnect', function (conn) {
             /* API is call to get update the call logs  */
-            SaveUpdateDvrDetails.updateCalllogsFromDvrToOperator(conn.parameters.CallSid, '', popupForm.recordingUrl.url, popupForm.recordingUrl.recordingSid)
+            SaveUpdateDvrDetails.updateCalllogsFromDvrToOperator(conn.parameters.CallSid, '', popupForm.recordingUrl.url, popupForm.recordingUrl.recordingSid, "completed")
               .then((response) => {
                 console.log('response', response.data);
                 conn.disconnect();
                 popupForm.accept = false;
                 popupForm.show = false;
+                localStorage.removeItem('callSid')
               }).catch((err) => {
               console.log('err', err);
             });
-            ApiIntegration.updateWorker()
+            ApiIntegration.updateWorker("Online")
               .then((response) => {
                 console.log('update worker', response);
               }).catch((error) => {
