@@ -112,7 +112,7 @@
                            <i class="fas fa-phone" @click="disconnectCall(callSid)" style="font-size: 12px;padding-left: 6px;padding-top: 7px;padding-right: 6px;padding-bottom: 4px;"></i>
                            </span>
                   </span>
-                  <button @click="showVideoControls">Full Screen</button>
+                  <button v-if="fromOperatorToDashboard===true" @click="showVideoControls">Full Screen</button>
                 </div>
                 <div v-if="callSid===undefined || callSid===''">
                   <StartRecording :callSidforRecording=callSidThisPage></StartRecording>
@@ -634,9 +634,10 @@
       },
       /* code to disconnect video call  */
       disconnectVideoCall() {
+        //this.SaveNotesDisabled = false;
         var vm = this;
         vm.room.disconnect();
-        localStorage.removeItem('roomStatus');
+        localStorage.removeItem('participantIdentity');
         /* Api to get composition id to save video playback  */
         SaveUpdateDvrDetails.composeVideoRecordings(vm.roomSid, vm.participantSid, vm.fmsToken)
           .then((videoResponse) => {

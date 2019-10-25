@@ -11,7 +11,7 @@ export default {
   /*
       Function to get the list of call logs data if Operator or Admin logged in
    */
-  getCallLogs(userType, fmsToken) {
+  getCallLogs(userType, fmsToken, status) {
     /*
       Condition to get the list of call logs data if Operator logged in
    */
@@ -26,7 +26,8 @@ export default {
             from: operatorName,
             workspaceSid: workSpaceId,
             date: null,
-            durations: []
+            durations: [],
+            status : status
           }
         },
         headers: {
