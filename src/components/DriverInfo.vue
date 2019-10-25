@@ -8,22 +8,21 @@
               <h6>Car Information</h6>
               <div class="card-text">
                 <div style="padding-top: 6px;">
-                  <p class="card-text-title"><strong>License Plate Number: {{ vehicleData.car.licensePlateNumber  || ''}}</strong>  </p><!---->
+                  <p class="card-text-title"><strong>License Plate Number:</strong>  {{ vehicleData.car.licensePlateNumber  || ''}}</p>
 
                 </div>
               </div>
               <div class="card-text">
                 <div style="padding-top: 6px;">
-                  <p class="card-text-title"><strong>Car Type: {{ vehicleData.car.modelName }}</strong> </p><!---->
+                  <p class="card-text-title"><strong>Car Type:</strong> {{ vehicleData.car.modelName }}</p>
 
                 </div>
               </div>
               <div class="card-text">
                 <div style="padding-top: 6px;">
-                  <p class="card-text-title"><strong>DVR Model: {{
-                    vehicleData.car.deviceName }}</strong>
-                    <!-- <i class="fas fa-circle fa-color-green" v-bind:class="vehicleStatusColorClassObject"></i> {{
-                    vehicleData.car.deviceName }} -->
+                  <p class="card-text-title"><strong>DVR Model: </strong>
+                    <i class="fas fa-circle fa-color-green" v-bind:class="vehicleStatusColorClassObject"></i> {{
+                    vehicleDetails.vehicleStatus }}
                   </p>
 
                 </div>
@@ -35,12 +34,13 @@
                <h6 style="padding-top: 13px;">Driver Information</h6>
               <div class="card-text">
                 <div>
-                  <p class="card-text-title" style="padding-top: 6px;"><strong>Driver Name: {{ vehicleData.driver.firstName }} {{' ' +vehicleData.driver.lastName }}</strong> </p><!---->
+                  <p class="card-text-title" style="padding-top: 6px;"><strong>Driver Name:</strong> {{ vehicleData.driver.firstName }} {{' ' +vehicleData.driver.lastName }}</p>
+
                 </div>
               </div>
               <div class="card-text">
                 <div style="padding-top: 6px;">
-                  <p class="card-text-title"><strong>Driver ID: {{vehicleData.driver.driverId }}</strong> </p><!---->
+                  <p class="card-text-title"><strong>Driver ID:</strong> {{vehicleData.driver.id }}</p>
                 </div>
               </div>
             </div>
@@ -219,20 +219,19 @@
                <div class="card" style="width: 160px;height: 278px;">
                 <div class="card-body">
                   <h6>Status</h6>
-                  <p class="card-text telematic-data-p" style="padding-top: 14px;">
-                  <img style="width:28px;" v-if="batteryLevel == 100" src="../assets/battery_4.png" >
-                  <img style="width:28px;" v-if="batteryLevel == 75" src="../assets/battery_3.png" >
-                  <img style="width:28px;" v-if="batteryLevel == 50" src="../assets/battery_2.png" >
-                  <img style="width:28px;" v-if="batteryLevel == 25" src="../assets/battery_1.png" >
-                  {{temperature}} &#8451;
-                  &nbsp; &nbsp; &nbsp; &nbsp;<img style="width:28px;" v-if="signalLevel == 4" src="../assets/lte_4.png" > 
-                  <img style="width:28px;" v-if="signalLevel == 3" src="../assets/lte_3.png" > 
-                  <img style="width:28px;" v-if="signalLevel == 2" src="../assets/lte_2.png" > 
-                  <img style="width:28px;" v-if="signalLevel == 1" src="../assets/lte_1.png" > 
-                  <img style="width:28px;" v-if="signalLevel == 0" src="../assets/lte_0.png" > 
-                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;Altitude : {{altitude}} 
-                  &nbsp; &nbsp;&nbsp;&nbsp; Speed: {{speed}}</p><br>
+                  <p class="card-text telematic-data-p" style="padding-top: 14px;"><img style="width:28px;" src="../assets/battery_4.png" >
+                  {{telematicsData.Temperature}} &#8451;
+                  &nbsp; &nbsp; &nbsp; &nbsp;<img style="width:28px;" v-if="telematicsData.SignalLevel == 4" src="../assets/lte_4.png" > 
+                  <img style="width:28px;" v-if="telematicsData.SignalLevel == 3" src="../assets/lte_3.png" > 
+                  <img style="width:28px;" v-if="telematicsData.SignalLevel == 2" src="../assets/lte_2.png" > 
+                  <img style="width:28px;" v-if="telematicsData.SignalLevel == 1" src="../assets/lte_1.png" > 
+                  <img style="width:28px;" v-if="telematicsData.SignalLevel == 0" src="../assets/lte_0.png" > 
+                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;Altitude : {{telematicsData.Gps.alt}} &nbsp; &nbsp;&nbsp;&nbsp; Speed: {{telematicsData.Gps.spd}}</p><br>
+                  <!-- <hr> -->
                   <h6>Gravity</h6>
+                  <!-- <p class="card-text telematic-data-p">Temperature = </p>
+                  <p class="card-text telematic-data-p"> Signal Level = {{telematicsData.SignalLevel}}</p>
+                  <p class="card-text telematic-data-p"> Battery Level= {{telematicsData.BatteryLevel}} %</p> -->
                 </div>
               </div>
               
@@ -245,16 +244,22 @@
                     <p class="card-text telematic-data-p" style="font-size: 10px;"> Z = {{zGyroscope || 0}}</p>
                   </div><br/>
                   <h6 class="card-title" style="font-size: 12px;">Linear Acceleration</h6>
-                    <p class="card-text telematic-data-p" style="font-size: 10px;">X = {{xLinearAcceleration || 0 }} </p>
-                    <p class="card-text telematic-data-p" style="font-size: 10px;">Y = {{yLinearAcceleration || 0}}</p>
-                    <p class="card-text telematic-data-p" style="font-size: 10px;">Z = {{zLinearAcceleration || 0}}</p>
+                    <p class="card-text telematic-data-p" style="font-size: 10px;">X = {{telematicsData.LinearAcceleration.x || '' }} </p>
+                    <p class="card-text telematic-data-p" style="font-size: 10px;">Y = {{telematicsData.LinearAcceleration.y || ''}}</p>
+                    <p class="card-text telematic-data-p" style="font-size: 10px;">Z = {{telematicsData.LinearAcceleration.z || ''}}</p>
                    <br/>
                    <h6 class="card-title" style="font-size: 12px;">Acceleration</h6>
-                    <p class="card-text telematic-data-p" style="font-size: 10px;">X = {{xAcceleration || 0 }} </p>
-                    <p class="card-text telematic-data-p" style="font-size: 10px;">Y = {{yAcceleration || 0 }}</p>
-                    <p class="card-text telematic-data-p" style="font-size: 10px;">Z = {{zAcceleration || 0 }}</p>
-                  </div>
+                    <p class="card-text telematic-data-p" style="font-size: 10px;">X = {{telematicsData.LinearAcceleration.x || '' }} </p>
+                    <p class="card-text telematic-data-p" style="font-size: 10px;">Y = {{telematicsData.LinearAcceleration.y || ''}}</p>
+                    <p class="card-text telematic-data-p" style="font-size: 10px;">Z = {{telematicsData.LinearAcceleration.z || ''}}</p>
+                </div>
               </div>
+              <!-- <div class="card" style="width: 160px;">
+                <div class="card-body">
+                  <h5 class="card-title">Status</h5>
+                  <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                </div>
+              </div> -->
               </div>
               <div class="card-text">
                 <!-- <table class="table">
@@ -306,39 +311,53 @@
                   <h6>Job Information</h6>
                   <div class="card-text">
                     <div>
-                      <p class="card-text-title job-title"><strong>Job: {{vehicleData.job.description}}</strong> </p><!---->
+                      <p class="card-text-title job-title"><strong>Job:</strong> {{vehicleData.job.description}}</p>
                     </div>
                   </div>
                   <div class="card-text">
                     <div>
-                      <p class="card-text-title job-title"><strong>Job Status: {{
-                        vehicleData.job.job_status}}</strong> </p><!--{{
-                        vehicleData.job.job_status}}--><!--<i class="fas fa-circle" v-bind:class="jobStatusColorClassObject"></i> -->
+                      <p class="card-text-title job-title"><strong>Job Status:</strong> <i class="fas fa-circle" v-bind:class="jobStatusColorClassObject"></i> {{
+                        vehicleData.job.job_status}}</p>
                     </div>
                   </div>
                   <div class="card-text">
                     <div>
-                      <p class="card-text-title job-title"><strong>Start Time: {{vehicleData.job.start_time | formatDate}}, {{vehicleData.job.start_time | formatTime}}</strong>   </p><!---->
+                      <p class="card-text-title job-title"><strong>Start Time:</strong>  </p>
+                      <!-- <p><i class="fas fa-circle" v-bind:class="jobStatusColorClassObject"></i> {{
+                        vehicleData.job.job_status}}
+                      </p> -->
                     </div>
                   </div>
                   <div class="card-text">
                     <div>
-                      <p class="card-text-title job-title"><strong>End Time: {{vehicleData.job.end_time | formatDate}}, {{vehicleData.job.end_time | formatTime}}</strong>  </p><!---->
+                      <p class="card-text-title job-title"><strong>End Time:</strong>  </p>
+                      <!-- <p><i class="fas fa-circle" v-bind:class="jobStatusColorClassObject"></i> {{
+                        vehicleData.job.job_status}}
+                      </p> -->
                     </div>
                   </div>
                   <div class="card-text">
                     <div>
-                      <p class="card-text-title job-title"><strong>Start Location: {{vehicleData.job.start_location}}</strong>  </p><!---->
+                      <p class="card-text-title job-title"><strong>Start Location:</strong>  </p>
+                      <!-- <p><i class="fas fa-circle" v-bind:class="jobStatusColorClassObject"></i> {{
+                        vehicleData.job.job_status}}
+                      </p> -->
                     </div>
                   </div>
                   <div class="card-text">
                     <div>
-                      <p class="card-text-title job-title"><strong>End Location: {{vehicleData.job.destination}}</strong> </p><!---->
+                      <p class="card-text-title job-title"><strong>End Location:</strong> </p>
+                      <!-- <p><i class="fas fa-circle" v-bind:class="jobStatusColorClassObject"></i> {{
+                        vehicleData.job.job_status}}
+                      </p> -->
                     </div>
                   </div>
                   <div class="card-text">
                     <div>
-                      <p class="card-text-title job-title"><strong>Geofence: {{vehicleData.job.geofenceName}}</strong></p><!---->
+                      <p class="card-text-title job-title"><strong>Geofence: </strong></p>
+                      <!-- <p><i class="fas fa-circle" v-bind:class="jobStatusColorClassObject"></i> {{
+                        vehicleData.job.job_status}}
+                      </p> -->
                     </div>
                   </div>
               </div>
@@ -387,16 +406,12 @@
   import PlacesMarker from "./maps/Placemarker1";
   import createGeofence from "./maps/CreateGeofence";
   import directionMarker from "./maps/DirectionsMarker";
-  import Config from '../config';
 
   const Twilio = require('twilio-client');
   var seconds = 0,
     minutes = 0,
     hours = 0,
     t;
-  var carDriverJobData;
-
-  
   $(document).ready(function () {
     /* Code to exit video  */
     $('#exitVideoClick').on('click', function () {
@@ -411,16 +426,16 @@
       }
     })
   });
-      
+
   export default {
     name: 'DriverInfo',
     props: ["callSid", "timerRouter", "fromOperatorToDashboard", "isTrackSubscribe", "trackSubscribed", "deviceId", "passConnToDisconnectOutgoingCall", "roomSid", "participantSid", "roomName", "room", "imeiNo"],
     components: {
       StartRecording,
       directionMarker,
-      mapLoader,
-      PlacesMarker,
-      createGeofence
+        mapLoader,
+        PlacesMarker,
+        createGeofence
     },
     data() {
       return {
@@ -468,18 +483,7 @@
         xGyroscope : '',
         yGyroscope: '',
         zGyroscope : '',
-        geofence: {},
-        xLinearAcceleration : '',
-        yLinearAcceleration: '',
-        zLinearAcceleration : '',
-        xAcceleration : '',
-        yAcceleration: '',
-        zAcceleration : '',
-        batteryLevel : 0,
-        temperature: 0,
-        signalLevel : 0,
-        altitude : 0,
-        speed: 0,
+        geofence: {}
       }
     },
 
@@ -511,13 +515,10 @@
         dataTest.SaveNotesDisabled = false;
       });
 
-
-
     },
 
     created() {
       var vm = this;
-
       vm.fmsToken = localStorage.getItem("fmsToken");
       // this.timer();
       EventBus.$emit('notes', this.message);
@@ -530,43 +531,12 @@
         .then((res) => {
           console.log('driverInfo', res);
           this.vehicleData = res.data.data;
-          carDriverJobData = res.data.data;
-          console.log(carDriverJobData)
-          // this.geofence = carDriverJobData.job.geofence;
-          this.geofence = {
-            "type": "polygon",
-            "paths": [
-              {
-                "lng": 120.62624791504243,
-                "lat": 23.961124979598743
-              },
-              {
-                "lng": 120.82949498535493,
-                "lat": 24.33205072980901
-              },
-              {
-                "lng": 121.44472936035493,
-                "lat": 24.02636546109324
-              },
-              {
-                "lng": 121.28542760254243,
-                "lat": 23.337180796514954
-              },
-              {
-                "lng": 120.39553502441743,
-                "lat": 23.45817592855887
-              }
-            ]
-          },
-
-            console.log(this.geofence)
+          this.geofence = this.vehicleData.job.geofence;
           this.routes = {
-            origin: { placeId:'ChIJm61hnNwqaTQRHWxfx-5FbWQ'  },
-            destination: { placeId:'ChIJeWx978DTbjQRtbYmW1k4R2I'},
+            origin: { placeId: this.vehicleData.job.start_location_place_id },
+            destination: { placeId: this.vehicleData.job.destination_place_id},
             travelMode: "DRIVING"
           };
-          console.log(this.routes)
-
         }).catch((err) => {
         console.log(err);
       });
@@ -689,106 +659,25 @@
         Twilio.Device.activeConnection().mute(false);
       },
       getTelematicsData() {
-        var ws = null;
-        var vm =this;
-        const url = Config.telematicsWebsockeUrl+'?authorization='+this.fmsToken;
-        const listCMD = {
-            "api": "track",
-            "cmd": "add",
-            "request_message_id": "abc",
-            "args":{"deviceid":['936442486AA0E0FCDB88A3FCD7DBEA00F0608E86']}
-        };
-        console.log('url', url);
-        if ('WebSocket' in window){
-          ws = new WebSocket(url);
-        }
-        else if ('MozWebSocket' in window){
-          ws = new MozWebSocket(url);
-        }
-        ws.onopen = function (){
-          console.log('Info: WebSocket connection opened.');
-          ws.send(JSON.stringify(listCMD));
-        };
-        ws.onmessage = function (message){
-            console.log('Rxed: ' + message.data);
-            vm.telematicsData = JSON.parse(message.data);
-            console.log(vm.telematicsData)
-            if(vm.telematicsData.data){
-           
-                if(vm.telematicsData.data.Gyroscope){
-                    vm.xGyroscope = vm.telematicsData.Gyroscope.x;
-                    vm.yGyroscope = vn.telematicsData.Gyroscope.y;
-                    vm.zGyroscope = vm.telematicsData.Gyroscope.z;
-                } else {
-                    vm.xGyroscope = ''
-                    vm.yGyroscope = ''
-                    vm.zGyroscope = ''
-                }
-                if(vm.telematicsData.data.LinearAcceleration){
-                    vm.xLinearAcceleration = vm.telematicsData.data.LinearAcceleration.x;
-                    vm.yLinearAcceleration = vm.telematicsData.data.LinearAcceleration.y;
-                    vm.zLinearAcceleration = vm.telematicsData.data.LinearAcceleration.z
-                } else{
-                    vm.xLinearAcceleration  = '';
-                    vm.yLinearAcceleration = '';
-                    vm.zLinearAcceleration = '';  
-                }
-                if(vm.telematicsData.data.Acceleration){
-                    vm.xAcceleration = vm.telematicsData.data.Acceleration.x;
-                    vm.yAcceleration = vm.telematicsData.data.Acceleration.y;
-                    vm.zAcceleration = vm.telematicsData.data.Acceleration.z
-                } else{
-                    vm.xAcceleration  = '';
-                    vm.yAcceleration = '';
-                    vm.zAcceleration = '';  
-                }
-                if(vm.telematicsData.data.BatteryLevel){
-                  vm.batteryLevel =  vm.telematicsData.data.BatteryLevel;
-                } else {
-                  vm.batteryLevel = 0;
-                }
-                if(vm.telematicsData.data.Temperature){
-                  vm.temperature = vm.telematicsData.data.Temperature;
-                } else{
-                  vm.temperature = 0;
-                } 
-                if(vm.telematicsData.data.SignalLevel){
-                  vm.signalLevel = vm.telematicsData.data.SignalLevel;
-                } else{
-                  vm.signalLevel = 0;
-                }
-                if(vm.telematicsData.data.gps){
-                  vm.altitude = vm.telematicsData.data.gps.alt;
-                } else{
-                  vm.altitude = 0;
-                }
-                if(vm.telematicsData.data.gps){
-                  vm.speed = vm.telematicsData.data.gps.spd;
-                } else{
-                  vm.speed = 0;
-                }
-            }
-        };
-
-        // DriverInfoService.getTelematicsData()
-        //   .then(response =>{
-        //       console.log(response)
-        //       this.telematicsData = response.data[0];
-        //       if(this.telematicsData.Gyroscope){
-        //         this.xGyroscope = this.telematicsData.Gyroscope.x;
-        //         this.yGyroscope = this.telematicsData.Gyroscope.y;
-        //         this.zGyroscope = this.telematicsData.Gyroscope.z;
-        //       } else {
-        //         this.xGyroscope = ''
-        //         this.yGyroscope = ''
-        //         this.zGyroscope = ''
-        //       }
-        //   })
-        //   .catch(error => {
-        //       console.log(error);
-        //       this.$loading(false)
-        //   })
-        //setTimeout(this.getTelematicsData, 10000);
+        DriverInfoService.getTelematicsData()
+          .then(response =>{
+              console.log(response)
+              this.telematicsData = response.data[0];
+              if(this.telematicsData.Gyroscope){
+                this.xGyroscope = this.telematicsData.Gyroscope.x;
+                this.yGyroscope = this.telematicsData.Gyroscope.y;
+                this.zGyroscope = this.telematicsData.Gyroscope.z;
+              } else {
+                this.xGyroscope = ''
+                this.yGyroscope = ''
+                this.zGyroscope = ''
+              }
+          })
+          .catch(error => {
+              console.log(error);
+              this.$loading(false)
+          })
+        setTimeout(this.getTelematicsData, 10000);
       },
       showVideoControls(){
         var elem = document.getElementById("remote_video");

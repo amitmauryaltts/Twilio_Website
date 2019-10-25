@@ -158,8 +158,10 @@
 
       popupForm = this;
       var fmsToken = this.$route.query.access_token == undefined ? localStorage.getItem("fmsToken") : this.$route.query.access_token;   //Getting FMS token from Local Storage
+
       //var fmsToken =  $cookies.get('access_token')  == undefined ? localStorage.getItem("fmsToken")  : $cookies.get('access_token');
       console.log(fmsToken);
+
 
       localStorage.setItem("fmsToken", fmsToken);
       //var fmsToken =  $cookies.get('access_token')  == undefined ? localStorage.getItem("fmsToken")  : $cookies.get('access_token');
