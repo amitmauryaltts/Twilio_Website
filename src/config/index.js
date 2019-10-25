@@ -33,7 +33,7 @@ module.exports = {
   header:{
     authorization : 'Bearer '+ localStorage.getItem("fmsToken"),
     contentType: 'application/json'
-  },
-  telematicsWebsockeUrl:'wss://fc8k2pesn9.execute-api.us-east-2.amazonaws.com/v1'
+  }
+
 };
 

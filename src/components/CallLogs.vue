@@ -66,7 +66,7 @@
                 <td >{{ callLog.deviceCallLogDetails.callLog.date | formatDate }}</td>
                 <td >{{ callLog.deviceCallLogDetails.callLog.date | formatTime }}</td>
                 <td v-if="callLog.deviceCallLogDetails.car.licensePlateNumber"><button @click="showDriverInformation(callLog.deviceCallLogDetails)" >{{ callLog.deviceCallLogDetails.car.licensePlateNumber }}</button></td>
-                <td v-else-if="callLog.deviceCallLogDetails.car =='deviceId does not exists' ">{{ callLog.deviceCallLogDetails.car.licensePlateNumber }}</td>
+                <td v-else-if="callLog.deviceCallLogDetails.car == 'device does not exists' ">{{ callLog.deviceCallLogDetails.car.licensePlateNumber }}</td>
                 <td >  {{  callLog.deviceCallLogDetails.job  == undefined ? '' : callLog.deviceCallLogDetails.job.description}}</td>
                 <td >{{ callLog.deviceCallLogDetails.callLog.duration }} seconds</td>
                 <td class="btn-cell" >
