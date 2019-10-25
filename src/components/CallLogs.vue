@@ -20,16 +20,16 @@
         </div>
       </div>
       <div class="card bg-danger">
-        <div class="card-body text-center">
+        <div class="card-body text-center" @click="getMissedCallLogs('cancelled', 'clickEvent')">
           <p class="card-text">
             <i class="fas fa-phone-slash fa-icon"></i>
             <span class="call-status">Missed</span>
-            <span class="call-num">{{ missedTaskData.length  }}</span>
+            <span class="call-num">{{ missedCallLength }}</span>
           </p>
         </div>
       </div>
       <div class="card bg-primary">
-        <div class="card-body text-center">
+        <div class="card-body text-center" @click="getCallLogs('completed')">
           <p class="card-text">
             <i class="fas fa-phone fa-icon"></i>
             <span class="call-status">Completed</span>
@@ -42,7 +42,9 @@
       <div class="card">
         <div class="card-body">
           <h6>
-            Call Logs {{callLogsLength}}
+            <label v-if="missedCallData == true"> Missed Call Logs {{missedCallLength}}</label>
+            <label v-if="missedCallData == false">  Call Logs {{callLogsLength}}</label>
+            
             <div class="call-log-btn-head"  @click="showModal">
               <i class="fas fa-filter"></i>
             </div>
@@ -57,7 +59,7 @@
                 <th>License Plate Number</th>
                 <th>Job Description</th>
                 <th>Call Duration</th>
-                <th>Actions</th>
+                <th v-if="missedCallData == false">Actions</th>
               </tr>
               </thead>
               <tbody v-if="this.callLogsData.length > 0">
@@ -69,7 +71,7 @@
                 <td v-else-if="callLog.deviceCallLogDetails.car == 'device does not exists' ">{{ callLog.deviceCallLogDetails.car.licensePlateNumber }}</td>
                 <td >  {{  callLog.deviceCallLogDetails.job  == undefined ? '' : callLog.deviceCallLogDetails.job.description}}</td>
                 <td >{{ callLog.deviceCallLogDetails.callLog.duration }} seconds</td>
-                <td class="btn-cell" >
+                <td class="btn-cell" v-if="missedCallData == false">
                   <i  class="fas fa-clipboard-list"
                       @click="showNoteDetails(callLog.deviceCallLogDetails.callLog.notes)"></i>
                   <i style="font-size:16px" class="fa" v-if="(videoLoader == false || videoCallid != callLog.deviceCallLogDetails.callLog.id) && callLog.deviceCallLogDetails.callLog.type == 'video' " @click="playVideo(callLog.deviceCallLogDetails.callLog.id, callLog.deviceCallLogDetails.callLog.recordingsid, 'Video', callLog.deviceCallLogDetails)">&#xf03d;</i>
@@ -272,7 +274,11 @@ export default {
     job_description : '',
     videoLink : '',
     videoLoader:false,
-    videoCallid : ''
+    videoCallid : '',
+    missedCallLength:0,
+    missedCallData : false,
+    completedCallData : false,
+    completedCallLength : 0
     }
   },
   created(){
@@ -281,7 +287,8 @@ export default {
     this.fmsToken = localStorage.getItem("fmsToken");
     fmsToken = this.fmsToken
     this.getOnlineWaitingTaskCount()
-    this.getCallLogs(this.fmsToken);
+    this.getCallLogs('completed');
+    this.getMissedCallLogs('cancelled','default')
   },
   methods :{
     /* Function to show number of online 
@@ -382,12 +389,18 @@ export default {
     /*
       Function to get the call logs history
     */
-    getCallLogs(fmsToken){
-        CallLogsService.getCallLogs(userType,this.fmsToken)
+    getCallLogs(status){
+      this.missedCallData = false;
+      this.completedCallData = false;
+        CallLogsService.getCallLogs(userType, this.fmsToken, status)
           .then(response =>{
             if(response.data.callLogs){
                this.callLogsData = response.data.callLogs;
-               this.callLogsLength = this.callLogsData.length
+               this.callLogsLength = this.callLogsData.length;
+                if(status == 'completed'){
+                   this.completedCallData = true;
+                   this.completedCallLength = this.callLogsData.length;
+                }
             }
             if(response.data.errorMessage){
             }
@@ -554,7 +567,28 @@ export default {
     },
     closeNotesPopup(){
        $('#showNoteDetailsModal').modal('hide');
-    }
+    },
+    getMissedCallLogs(status, event){
+       this.$loading(true)
+       this.callLogsData  = [];
+       if(event == 'clickEvent'){
+        this.missedCallData = true;
+        this.completedCallData = false;
+       }
+       CallLogsService.getCallLogs(userType, this.fmsToken, status)
+          .then(response =>{
+            if(response.data.callLogs){
+               this.callLogsData = response.data.callLogs;
+               console.log(this.callLogsData);
+               this.missedCallLength = this.callLogsData.length
+            }
+            this.$loading(false)
+          })
+          .catch(error => {
+             console.log(error);
+             this.$loading(false)
+          })
+    },
   },
   computed:{
     
