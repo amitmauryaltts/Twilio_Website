@@ -20,7 +20,7 @@
         </div>
       </div>
       <div class="card bg-danger">
-        <div class="card-body text-center" @click="getMissedCallLogs('cancelled', 'clickEvent')">
+        <div class="card-body text-center" @click="getMissedCallLogs('missed', 'clickEvent')">
           <p class="card-text">
             <i class="fas fa-phone-slash fa-icon"></i>
             <span class="call-status">Missed</span>
@@ -288,7 +288,7 @@ export default {
     fmsToken = this.fmsToken
     this.getOnlineWaitingTaskCount()
     this.getCallLogs('completed');
-    this.getMissedCallLogs('cancelled','default')
+    this.getMissedCallLogs('missed','default')
   },
   methods :{
     /* Function to show number of online 
@@ -392,6 +392,7 @@ export default {
     getCallLogs(status){
       this.missedCallData = false;
       this.completedCallData = false;
+      this.$loading(true)
         CallLogsService.getCallLogs(userType, this.fmsToken, status)
           .then(response =>{
             if(response.data.callLogs){
